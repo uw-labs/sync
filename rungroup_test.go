@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/uw-labs/proximo/pkg/rungroup"
+	"github.com/uw-labs/rungroup"
 )
 
 func run(ctx context.Context, d time.Duration) error {

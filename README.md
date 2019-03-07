@@ -1,4 +1,4 @@
-# sync
+# sync [![CircleCI](https://circleci.com/gh/uw-labs/sync.svg?style=svg)](https://circleci.com/gh/uw-labs/sync)
 Extension of types from [golang.org/x/sync](https://godoc.org/golang.org/x/sync).
 
 ## rungroup 

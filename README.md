@@ -1,4 +1,13 @@
-# rungroup
-Alternative to [error group](https://godoc.org/golang.org/x/sync/errgroup) that stops as soon as any function started in the group terminates. 
-It also allows users to run functions asynchronously, so that the call to wait won't wait for them to terminate, but the group will still stop
-(the underlying context will be cancelled) as soon as they terminate.
+# sync
+Extension of types from [golang.org/x/sync](https://godoc.org/golang.org/x/sync).
+
+## rungroup 
+Alternative to error group that stops (i.e. cancels the underlying context) as soon as any
+function started in the group terminates. For this to work it can only be created with a context.
+
+## gogroup 
+Another alternative to error group that only waits until any single function started in the group terminates.
+Like rungroup it can only be created with a context and this context is cancelled as soon as any function
+started in the group terminates.
+
+NOTE: calling wait without starting any goroutine with the `Go` method will block until the parent context is canceled.

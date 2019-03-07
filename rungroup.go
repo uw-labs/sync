@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // This is an adaptation of golang.org/x/sync/errgroup
-// to satisfy needs of this project.
 package rungroup
 
 import (

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/uw-labs/rungroup/gogroup"
+	"github.com/uw-labs/sync/gogroup"
 )
 
 func run(ctx context.Context, d time.Duration) error {

@@ -3,25 +3,23 @@
 // license that can be found in the LICENSE file.
 
 // This is an adaptation of golang.org/x/sync/errgroup
+// that cancels the underlying context as soon as one of
+// the goroutines started with the Go method terminates.
 package rungroup
 
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 )
 
 // Group is a collection of goroutines serving as one a part of one process. The underlying context
 // is cancelled as soon as any goroutine terminates regardless of the outcome.
 type Group interface {
-	// Wait blocks until all function calls from the Go method have returned, then
-	// returns the first non-nil error (if any) from them. Note that it won't wait
-	// for functions started with GoAsync.
-	Wait() error
 	// Go calls the given function in a new goroutine.
 	Go(f func() error)
-	// GoAsync behaves the same way Go does, except the call to Wait won't wait for this function to finish.
-	GoAsync(f func() error)
+	// Wait blocks until all function calls from the Go method have returned, then
+	// returns the first non-nil error (if any) encountered.
+	Wait() error
 }
 
 type group struct {
@@ -30,11 +28,11 @@ type group struct {
 	wg sync.WaitGroup
 
 	errOnce sync.Once
-	err     atomic.Value
+	err     error
 }
 
 // New returns a new Group and an associated Context derived from the provided one.
-// The context is cancelled when the first goroutine started with Go or GoAsync returns
+// The context is cancelled when the first goroutine started with Go terminates
 // regardless of the outcome.
 func New(ctx context.Context) (*group, context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -43,25 +41,9 @@ func New(ctx context.Context) (*group, context.Context) {
 
 func (g *group) Wait() error {
 	g.wg.Wait()
-	if g.cancel != nil {
-		g.cancel()
-	}
+	g.cancel()
 
-	if err := g.err.Load(); err != nil {
-		return err.(error)
-	}
-	return nil
-}
-
-func (g *group) runFunc(f func() error) {
-	if err := f(); err != nil {
-		g.errOnce.Do(func() {
-			g.err.Store(err)
-		})
-	}
-	if g.cancel != nil {
-		g.cancel()
-	}
+	return g.err
 }
 
 func (g *group) Go(f func() error) {
@@ -69,10 +51,12 @@ func (g *group) Go(f func() error) {
 
 	go func() {
 		defer g.wg.Done()
-		g.runFunc(f)
-	}()
-}
 
-func (g *group) GoAsync(f func() error) {
-	go g.runFunc(f)
+		if err := f(); err != nil {
+			g.errOnce.Do(func() {
+				g.err = err
+			})
+		}
+		g.cancel()
+	}()
 }
